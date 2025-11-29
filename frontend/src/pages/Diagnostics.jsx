@@ -1,16 +1,59 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PredictionInputForm from "../components/PredictionInputForm";
-import { Stethoscope, Activity, AlertTriangle, CheckCircle, X } from "lucide-react";
+import { Stethoscope, Activity, AlertTriangle, CheckCircle, X, ThumbsUp, ThumbsDown } from "lucide-react";
+
+import { useAuth } from "../context/AuthContext";
 
 const Diagnostics = () => {
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+  const { saveFeedback } = useAuth();
+  const [lastFormData, setLastFormData] = useState(null); // Store form data for feedback
+
+  const handleFeedback = async (type) => {
+    setFeedback(type);
+
+    if (!prediction || !lastFormData) return;
+
+    // Map capitalized keys to lowercase for Mongoose model
+    const mappedFormData = {
+      age: Number(lastFormData.Age),
+      sex: lastFormData.Sex,
+      bmi: Number(lastFormData.BMI),
+      alt: Number(lastFormData.ALT),
+      ast: Number(lastFormData.AST),
+      alp: Number(lastFormData.ALP),
+      bilirubin: Number(lastFormData.Bilirubin),
+      albumin: Number(lastFormData.Albumin),
+      drug_risk_score: Number(lastFormData.Drug_Risk_Score),
+      alcohol_use: lastFormData.Alcohol_Use,
+      medications: lastFormData.Medications,
+      symptoms: lastFormData.Symptoms,
+      preexisting_liver_disease: lastFormData.Preexisting_Liver_Disease,
+      dili: lastFormData.DILI,
+      daily_dose_mg: Number(lastFormData.Daily_Dose_mg),
+      drug_duration_days: Number(lastFormData.Drug_Duration_Days),
+    };
+
+    const feedbackData = {
+      ...mappedFormData,
+      ...prediction,
+      feedback: type
+    };
+
+    console.log("Sending feedback data:", feedbackData);
+
+    await saveFeedback(feedbackData);
+  };
 
   const handlePredict = async (formData) => {
     console.log("Raw Form Data:", formData);
     setPrediction(null);
+    setFeedback(null);
     setLoading(true);
+    setLastFormData(formData); // Save for feedback
 
     try {
       // Send only the fields needed by the model (matching the curl request format)
@@ -25,12 +68,12 @@ const Diagnostics = () => {
         Bilirubin: Number(formData.Bilirubin) || 0,
         Albumin: Number(formData.Albumin) || 0,
       };
-      
+
       console.log("Sending payload to backend (only model-relevant fields):", payload);
 
       const response = await fetch("https://5a1845ab7079.ngrok-free.app/predict", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
@@ -107,20 +150,18 @@ const Diagnostics = () => {
                   <X size={20} />
                 </button>
 
-                <div className={`p-8 text-center ${
-                  prediction.is_disease 
-                    ? "bg-red-500/10" 
-                    : "bg-green-500/10"
-                }`}>
+                <div className={`p-8 text-center ${prediction.is_disease
+                  ? "bg-red-500/10"
+                  : "bg-green-500/10"
+                  }`}>
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", bounce: 0.5 }}
                     className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-4 
-                      ${
-                        prediction.is_disease 
-                          ? "bg-red-500 text-white" 
-                          : "bg-green-500 text-white"
+                      ${prediction.is_disease
+                        ? "bg-red-500 text-white"
+                        : "bg-green-500 text-white"
                       }`}
                   >
                     {prediction.is_disease ? (
@@ -130,11 +171,10 @@ const Diagnostics = () => {
                     )}
                   </motion.div>
 
-                  <h2 className={`text-3xl font-bold mb-2 ${
-                    prediction.is_disease 
-                      ? "text-red-600" 
-                      : "text-green-600"
-                  }`}>
+                  <h2 className={`text-3xl font-bold mb-2 ${prediction.is_disease
+                    ? "text-red-600"
+                    : "text-green-600"
+                    }`}>
                     {prediction.label}
                   </h2>
                   {/* <p className="text-muted-foreground">
@@ -153,11 +193,10 @@ const Diagnostics = () => {
                         initial={{ width: 0 }}
                         animate={{ width: `${prediction.confidence * 100}%` }}
                         transition={{ duration: 1, ease: "easeOut" }}
-                        className={`h-full rounded-full ${
-                          prediction.is_disease 
-                            ? "bg-red-500" 
-                            : "bg-green-500"
-                        }`}
+                        className={`h-full rounded-full ${prediction.is_disease
+                          ? "bg-red-500"
+                          : "bg-green-500"
+                          }`}
                       />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2 text-center">
@@ -176,6 +215,38 @@ const Diagnostics = () => {
                       <span className="block text-muted-foreground text-xs uppercase tracking-wider">Model Version</span>
                       <span className="font-semibold text-lg">v1.0.0</span>
                     </div>
+                  </div>
+
+                  {/* Feedback Section */}
+                  <div className="pt-6 border-t border-border/50 text-center">
+                    <h3 className="text-sm font-medium mb-4">Does this prediction match your medical report?</h3>
+
+                    {!feedback ? (
+                      <div className="flex justify-center gap-4">
+                        <button
+                          onClick={() => handleFeedback('yes')}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
+                        >
+                          <ThumbsUp size={18} />
+                          <span>Yes</span>
+                        </button>
+                        <button
+                          onClick={() => handleFeedback('no')}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-colors"
+                        >
+                          <ThumbsDown size={18} />
+                          <span>No</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-sm text-muted-foreground font-medium"
+                      >
+                        Thank you for your feedback!
+                      </motion.div>
+                    )}
                   </div>
 
                   {prediction.raw_prediction && (

@@ -8,6 +8,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [negativeFeedbacks, setNegativeFeedbacks] = useState([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
 
   // Restore user/token from localStorage on refresh
   useEffect(() => {
@@ -21,15 +23,61 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  // Fetch negative feedback function
+  const fetchNegativeFeedbacks = async () => {
+    console.log("AuthContext: Checking role...", user?.role);
+    if (user?.role === 'Pharmacist') {
+      console.log("AuthContext: Role is Pharmacist. Fetching feedback...");
+      setFeedbackLoading(true);
+      try {
+        const res = await axios.get("https://disrupters-opps.vercel.app/api/feedback/negative");
+        console.log("AuthContext: Fetch response:", res.data);
+        if (res.data.success) {
+          setNegativeFeedbacks(res.data.data);
+          console.log("Negative Feedbacks set:", res.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching negative feedback:", error);
+      } finally {
+        setFeedbackLoading(false);
+      }
+    } else {
+      console.log("AuthContext: Role is NOT Pharmacist or user is null.");
+      setNegativeFeedbacks([]); // Clear if not pharmacist or logged out
+    }
+  };
+
+  // Fetch patients function
+  const fetchPatients = async () => {
+    try {
+      const res = await axios.get("https://disrupters-opps.vercel.app/api/auth/patients");
+      if (res.data.success) {
+        return res.data.data;
+      }
+    } catch (error) {
+      console.error("Error fetching patients:", error);
+      return [];
+    }
+  };
+
+  // Fetch on user change
+  useEffect(() => {
+    console.log("AuthContext: User changed:", user);
+    if (user) {
+      fetchNegativeFeedbacks();
+    }
+  }, [user]);
+
   // ===============================
   // ⭐ SIGNUP FUNCTION
   // ===============================
-  const signup = async (fullname, email, password) => {
+  const signup = async (fullname, email, password, role) => {
     try {
       const res = await axios.post("https://disrupters-opps.vercel.app/api/auth/signup", {
         fullname,
         email,
         password,
+        role,
       });
 
       // Save to state + localStorage
@@ -89,6 +137,24 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
   };
 
+  // ===============================
+  // ⭐ SAVE FEEDBACK FUNCTION
+  // ===============================
+  const saveFeedback = async (feedbackData) => {
+    try {
+      console.log("AuthContext sending feedback:", feedbackData);
+      const res = await axios.post("https://disrupters-opps.vercel.app/api/feedback", feedbackData);
+      console.log("Feedback saved response:", res.data);
+      return { success: true, message: res.data.message };
+    } catch (error) {
+      console.error("Feedback save error:", error.response?.data || error.message);
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to save feedback.",
+      };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -98,6 +164,11 @@ export const AuthProvider = ({ children }) => {
         signup,
         login,
         logout,
+        saveFeedback,
+        negativeFeedbacks,
+        feedbackLoading,
+        fetchNegativeFeedbacks,
+        fetchPatients,
         isAuthenticated: !!token,
       }}
     >

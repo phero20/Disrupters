@@ -20,7 +20,8 @@ const AuthModal = ({ isOpen, onClose }) => {
     const [formData, setFormData] = useState({
         fullname: '',
         email: '',
-        password: ''
+        password: '',
+        role: 'Patient'
     });
 
     const navigate = useNavigate();
@@ -39,7 +40,7 @@ const AuthModal = ({ isOpen, onClose }) => {
         try {
             let result;
             if (isSignUp) {
-                result = await signup(formData.fullname, formData.email, formData.password);
+                result = await signup(formData.fullname, formData.email, formData.password, formData.role);
             } else {
                 result = await login(formData.email, formData.password);
             }
@@ -196,6 +197,39 @@ const AuthModal = ({ isOpen, onClose }) => {
                                         />
                                     </div>
                                 </motion.div>
+
+                                <AnimatePresence mode="popLayout">
+                                    {isSignUp && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0, y: -10 }}
+                                            animate={{ height: "auto", opacity: 1, y: 0 }}
+                                            exit={{ height: 0, opacity: 0, y: -10 }}
+                                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="pt-1">
+                                                <label className="block text-xs font-bold text-foreground uppercase tracking-wide mb-1.5">I am a</label>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    {['Patient', 'Pharmacist'].map((role) => (
+                                                        <div
+                                                            key={role}
+                                                            onClick={() => setFormData({ ...formData, role })}
+                                                            className={`
+                                                                cursor-pointer rounded-lg border px-4 py-2.5 text-sm font-medium text-center transition-all duration-200
+                                                                ${formData.role === role
+                                                                    ? 'bg-primary/10 border-primary text-primary ring-1 ring-primary/20'
+                                                                    : 'bg-background border-input text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                                                                }
+                                                            `}
+                                                        >
+                                                            {role}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
 
                                 {error && (
                                     <motion.div

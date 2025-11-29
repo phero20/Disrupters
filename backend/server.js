@@ -18,7 +18,10 @@ app.get('/', (req, res) => {
     res.send('Hello World!')
 })
 
+import feedbackRouter from './routes/feedbackRoutes.js'
+
 app.use('/api/auth', authRouter)
+app.use('/api/feedback', feedbackRouter)
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)

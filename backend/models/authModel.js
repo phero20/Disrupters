@@ -21,7 +21,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 6,
-      select: false, 
+      select: false,
+    },
+
+    role: {
+      type: String,
+      enum: ["Patient", "Pharmacist"],
+      default: "Patient",
     },
   },
   { timestamps: true }

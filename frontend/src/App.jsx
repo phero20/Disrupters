@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Upload from "./pages/Upload";
-import Results from "./pages/Results";
+import Results from "./pages/Evaluation";
 import Charts from "./pages/Charts";
 import Diagnostics from "./pages/Diagnostics";
 import Reports from "./pages/Reports";
@@ -27,7 +27,7 @@ function App() {
           {/* Main Pages */}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/upload" element={<Upload />} />
-          <Route path="/results" element={<Results />} />
+          <Route path="/evaluation" element={<Results />} />
           <Route path="/charts" element={<Charts />} />
 
           {/* MedTech Pages */}

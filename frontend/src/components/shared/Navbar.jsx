@@ -43,16 +43,17 @@ const Navbar = () => {
   }, []);
 
   // Navigation Routes
+  // Navigation Routes
   const navItems = [
     { name: "Home", path: "/", icon: <Activity size={16} /> },
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={16} /> },
     { name: "Upload Data", path: "/upload", icon: <Stethoscope size={16} /> },
-    { name: "Results", path: "/results", icon: <FileText size={16} /> },
+    { name: "Model Evaluation", path: "/evaluation", icon: <FileText size={16} /> },
     { name: "Charts", path: "/charts", icon: <Users size={16} /> },
     { name: "AI Diagnostics", path: "/diagnostics", icon: <Stethoscope size={16} /> },
     { name: "Patients", path: "/patients", icon: <Users size={16} /> },
     { name: "Reports", path: "/reports", icon: <FileText size={16} /> },
-  ];
+  ].filter(item => (item.name !== "Model Evaluation" && item.name !== "Patients") || user?.role === 'Pharmacist');
 
   const handleLogout = () => {
     logout();
@@ -69,22 +70,20 @@ const Navbar = () => {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
-        className={`fixed top-0 left-0 right-0 z-50 py-3 md:py-6 border-b transition-all duration-300 ${
-          isScrolled
-            ? "bg-background/95 backdrop-blur-xl border-border shadow-sm"
-            : "bg-background border-transparent"
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 py-3 md:py-6 border-b transition-all duration-300 ${isScrolled
+          ? "bg-background/95 backdrop-blur-xl border-border shadow-sm"
+          : "bg-background border-transparent"
+          }`}
       >
         <div className="max-w-360 mx-auto px-2 flex items-center justify-between">
 
           {/* LOGO */}
           <Link to="/" className="flex items-center gap-2 group">
             <div
-              className={`p-2 rounded-lg transition-colors ${
-                isScrolled
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card text-primary border border-border"
-              }`}
+              className={`p-2 rounded-lg transition-colors ${isScrolled
+                ? "bg-primary text-primary-foreground"
+                : "bg-card text-primary border border-border"
+                }`}
             >
               <Activity size={28} className="group-hover:animate-pulse" />
             </div>
@@ -104,11 +103,10 @@ const Navbar = () => {
                 <Link key={item.name} to={item.path}>
                   <div className="relative px-4 py-2 flex items-center gap-2 rounded-md hover:bg-accent transition-colors">
                     <span
-                      className={`text-md font-medium ${
-                        isActive
-                          ? "text-primary"
-                          : "text-muted-foreground hover:text-accent-foreground"
-                      }`}
+                      className={`text-md font-medium ${isActive
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-accent-foreground"
+                        }`}
                     >
                       {item.name}
                     </span>
@@ -142,9 +140,8 @@ const Navbar = () => {
                   <span className="text-sm max-w-[100px] truncate">{user?.fullname}</span>
                   <ChevronDown
                     size={14}
-                    className={`transition-transform ${
-                      userMenuOpen ? "rotate-180" : ""
-                    }`}
+                    className={`transition-transform ${userMenuOpen ? "rotate-180" : ""
+                      }`}
                   />
                 </motion.button>
 
@@ -295,9 +292,8 @@ const Navbar = () => {
                   className={`${isActive ? "text-primary" : "text-muted-foreground"}`}
                 />
                 <span
-                  className={`text-[10px] ${
-                    isActive ? "text-primary" : "text-muted-foreground"
-                  }`}
+                  className={`text-[10px] ${isActive ? "text-primary" : "text-muted-foreground"
+                    }`}
                 >
                   {item.name}
                 </span>
