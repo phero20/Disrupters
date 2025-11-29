@@ -1,39 +1,11 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import PredictionInputForm from "../components/PredictionInputForm"
+import PredictionInputForm from "../components/PredictionInputForm";
 import { Stethoscope, Activity, AlertTriangle, CheckCircle, X } from "lucide-react";
 
 const Diagnostics = () => {
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  // Map form data to 10 features expected by the model
-  const mapFormDataToFeatures = (data) => {
-    // Feature mapping based on medical relevance:
-    // 1. Age
-    // 2. Sex (Male=1, Female=0)
-    // 3. BMI
-    // 4. ALT (liver enzyme)
-    // 5. AST (liver enzyme)
-    // 6. ALP (liver enzyme)
-    // 7. Bilirubin
-    // 8. Albumin
-    // 9. Drug_Risk_Score
-    // 10. Alcohol_Use (Yes=1, No=0)
-    
-    return [
-      Number(data.Age) || 0,
-      data.Sex === "Male" ? 1 : 0,
-      Number(data.BMI) || 0,
-      Number(data.ALT) || 0,
-      Number(data.AST) || 0,
-      Number(data.ALP) || 0,
-      Number(data.Bilirubin) || 0,
-      Number(data.Albumin) || 0,
-      Number(data.Drug_Risk_Score) || 0,
-      data.Alcohol_Use === "Yes" ? 1 : 0,
-    ];
-  };
 
   const handlePredict = async (formData) => {
     console.log("Raw Form Data:", formData);
@@ -41,19 +13,27 @@ const Diagnostics = () => {
     setLoading(true);
 
     try {
-      // Transform form data to features array
-      const features = mapFormDataToFeatures(formData);
+      // Send only the fields needed by the model (matching the curl request format)
+      // Note: BMI, Drug_Risk_Score, Alcohol_Use, Medications, Symptoms are kept in form 
+      // for UI purposes but are not sent to the model as they're not used in prediction
+      const payload = {
+        Age: Number(formData.Age) || 0,
+        Sex: formData.Sex || "Male",
+        ALT: Number(formData.ALT) || 0,
+        AST: Number(formData.AST) || 0,
+        ALP: Number(formData.ALP) || 0,
+        Bilirubin: Number(formData.Bilirubin) || 0,
+        Albumin: Number(formData.Albumin) || 0,
+      };
       
-      console.log("Features array:", features);
+      console.log("Sending payload to backend (only model-relevant fields):", payload);
 
       const response = await fetch("https://5a1845ab7079.ngrok-free.app/predict", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          features: features
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -71,12 +51,15 @@ const Diagnostics = () => {
       console.log("Prediction result:", result);
 
       // Transform backend response to match frontend expectations
+      // Model classes: 1 = Liver Disease, 2 = No Disease (or 0 = No Disease, 1 = Liver Disease)
+      const isDisease = result.prediction === 1;
       const transformedResult = {
         predicted_class: result.prediction,
-        label: result.prediction === 1 ? "High Risk" : result.prediction === 2 ? "Low Risk" : "Unknown",
+        label: isDisease ? "Liver Disease Detected" : "No Liver Disease",
         probability_dili: result.confidence || 0,
         confidence: result.confidence || 0,
-        raw_prediction: result.prediction
+        raw_prediction: result.prediction,
+        is_disease: isDisease
       };
 
       setPrediction(transformedResult);
@@ -125,11 +108,9 @@ const Diagnostics = () => {
                 </button>
 
                 <div className={`p-8 text-center ${
-                  prediction.predicted_class === 1 
+                  prediction.is_disease 
                     ? "bg-red-500/10" 
-                    : prediction.predicted_class === 2 
-                    ? "bg-green-500/10" 
-                    : "bg-yellow-500/10"
+                    : "bg-green-500/10"
                 }`}>
                   <motion.div
                     initial={{ scale: 0 }}
@@ -137,28 +118,22 @@ const Diagnostics = () => {
                     transition={{ type: "spring", bounce: 0.5 }}
                     className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-4 
                       ${
-                        prediction.predicted_class === 1 
+                        prediction.is_disease 
                           ? "bg-red-500 text-white" 
-                          : prediction.predicted_class === 2 
-                          ? "bg-green-500 text-white" 
-                          : "bg-yellow-500 text-white"
+                          : "bg-green-500 text-white"
                       }`}
                   >
-                    {prediction.predicted_class === 1 ? (
+                    {prediction.is_disease ? (
                       <AlertTriangle size={40} />
-                    ) : prediction.predicted_class === 2 ? (
-                      <CheckCircle size={40} />
                     ) : (
-                      <Activity size={40} />
+                      <CheckCircle size={40} />
                     )}
                   </motion.div>
 
                   <h2 className={`text-3xl font-bold mb-2 ${
-                    prediction.predicted_class === 1 
+                    prediction.is_disease 
                       ? "text-red-600" 
-                      : prediction.predicted_class === 2 
-                      ? "text-green-600" 
-                      : "text-yellow-600"
+                      : "text-green-600"
                   }`}>
                     {prediction.label}
                   </h2>
@@ -179,20 +154,16 @@ const Diagnostics = () => {
                         animate={{ width: `${prediction.confidence * 100}%` }}
                         transition={{ duration: 1, ease: "easeOut" }}
                         className={`h-full rounded-full ${
-                          prediction.predicted_class === 1 
+                          prediction.is_disease 
                             ? "bg-red-500" 
-                            : prediction.predicted_class === 2 
-                            ? "bg-green-500" 
-                            : "bg-yellow-500"
+                            : "bg-green-500"
                         }`}
                       />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2 text-center">
-                      {prediction.predicted_class === 1
-                        ? "High risk classification with strong model confidence."
-                        : prediction.predicted_class === 2
-                        ? "Low risk classification with strong model confidence."
-                        : "Classification result with moderate confidence."}
+                      {prediction.is_disease
+                        ? "Liver disease detected based on clinical parameters."
+                        : "No liver disease detected. All parameters are within normal range."}
                     </p>
                   </div>
 
