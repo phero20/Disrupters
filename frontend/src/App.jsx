@@ -20,7 +20,7 @@ function App() {
       <Sidebar />
 
       {/* Main Content Area → shifted right on desktop */}
-      <main className="mt-20 md:px-30">
+      <main className="mt-20 md:px-30 max-md:pb-28">
         <Routes>
           <Route path="/" element={<Home />} />
 

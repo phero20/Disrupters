@@ -34,6 +34,7 @@ import {
   AreaChart,
   Area,
 } from "recharts";
+import { Link } from "react-router-dom";
 
 // --- Animation Variants ---
 const fadeUp = {
@@ -117,9 +118,9 @@ export default function Home() {
               before symptoms become dangerous.
             </p>
 
-            <button className="bg-primary text-primary-foreground px-8 py-4 rounded-sm font-medium flex items-center gap-2 hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 hover:-translate-y-0.5 text-lg cursor-pointer">
+            <Link to="/dashboard" className="bg-primary w-64 text-primary-foreground px-8 py-4 rounded-sm font-medium flex items-center gap-2 hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 hover:-translate-y-0.5 text-lg cursor-pointer">
               Open Dashboard <ArrowRight size={20} />
-            </button>
+            </Link>
           </motion.div>
 
           {/* Hero Visual - Liver Stats Card */}
@@ -197,13 +198,13 @@ export default function Home() {
             becoming visible only after mass usage.
           </p>
 
-          <div className="mb-12 rounded-2xl overflow-hidden shadow-xl max-w-5xl mx-auto h-72 bg-muted relative group">
+          {/* <div className="mb-12 rounded-2xl overflow-hidden shadow-xl max-w-5xl mx-auto h-72 bg-muted relative group">
             <div className="absolute inset-0 bg-foreground/5 group-hover:bg-transparent transition-colors duration-500"></div>
-             {/* Placeholder for image - replace with actual image source */}
+             Placeholder for image - replace with actual image source
              <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
                <Activity size={48} />
             </div>
-          </div>
+          </div> */}
 
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             {/* Stats Cards */}
@@ -658,9 +659,9 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button className="bg-primary text-primary-foreground px-10 py-4 rounded-sm font-medium flex items-center gap-2 hover:bg-primary/90 transition-all text-lg shadow-lg shadow-primary/10 cursor-pointer">
+            <Link to="/dashboard" className="bg-primary text-primary-foreground px-10 py-4 rounded-sm font-medium flex items-center gap-2 hover:bg-primary/90 transition-all text-lg shadow-lg shadow-primary/10 cursor-pointer">
               Go to Dashboard <ArrowRight size={20} />
-            </button>
+            </Link>
             <button className="border border-border px-10 py-4 rounded-sm font-medium flex items-center gap-2 hover:bg-accent transition-all text-lg cursor-pointer text-foreground">
               <Sparkles size={20} />
               Learn More
