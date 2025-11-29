@@ -8,6 +8,7 @@ dotenv.config()
 const app = express()
 const port = 3000
 
+// Allow all origins with cors()
 app.use(cors())
 
 connectDB()
