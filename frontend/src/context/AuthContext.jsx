@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
   // ===============================
   const signup = async (fullname, email, password) => {
     try {
-      const res = await axios.post("https://disrupters-opps.vercel.app/api/auth/signup", {
+      const res = await axios.post("http://localhost:3000/api/auth/signup", {
         fullname,
         email,
         password,
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
   // ===============================
   const login = async (email, password) => {
     try {
-      const res = await axios.post("https://disrupters-opps.vercel.app/api/auth/login", {
+      const res = await axios.post("http://localhost:3000/api/auth/login", {
         email,
         password,
       });

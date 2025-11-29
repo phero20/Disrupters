@@ -55,7 +55,7 @@ const Diagnostics = () => {
       const isDisease = result.prediction === 1;
       const transformedResult = {
         predicted_class: result.prediction,
-        label: isDisease ? "Liver Disease Detected" : "No Liver Disease",
+        label: isDisease ? "High Risk of Hepatotoxicity" : "Low Risk of Hepatotoxicity",
         probability_dili: result.confidence || 0,
         confidence: result.confidence || 0,
         raw_prediction: result.prediction,
