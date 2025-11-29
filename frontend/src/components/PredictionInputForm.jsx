@@ -49,10 +49,6 @@ const SECTIONS = [
   }
 ];
 
-
-// ----------------------------------------------------
-// UPDATED INPUT FIELD — With Slim, Clean, Visible Border
-// ----------------------------------------------------
 const InputField = ({ label, value, onChange, error, type = "text", options }) => (
   <div className="flex flex-col gap-1.5">
     <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -111,8 +107,6 @@ const InputField = ({ label, value, onChange, error, type = "text", options }) =
   </div>
 );
 
-
-
 export default function PredictionInputForm({ onSubmit }) {
   const [form, setForm] = useState({});
   const [errors, setErrors] = useState({});
@@ -129,7 +123,7 @@ export default function PredictionInputForm({ onSubmit }) {
     ];
 
     requiredFields.forEach((f) => {
-      if (!form[f]) newErrors[f] = "Required";
+      if (!form[f] && form[f] !== 0) newErrors[f] = "Required";
     });
 
     if (!form?.Medications?.length)
@@ -155,8 +149,13 @@ export default function PredictionInputForm({ onSubmit }) {
     if (!validate()) return;
 
     setLoading(true);
-    await onSubmit(form);
-    setLoading(false);
+    try {
+      await onSubmit(form);
+    } catch (error) {
+      console.error("Form submission error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getFieldType = (key) => {
@@ -177,7 +176,7 @@ export default function PredictionInputForm({ onSubmit }) {
       onSubmit={handleSubmit}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-360 mx-auto space-y-8"
+      className="w-full max-w-6xl mx-auto space-y-8"
     >
       {/* SECTIONS */}
       <div className="grid md:grid-cols-2 gap-6">
@@ -214,7 +213,6 @@ export default function PredictionInputForm({ onSubmit }) {
           </motion.div>
         ))}
       </div>
-
 
       {/* MULTI SELECT SECTIONS */}
       <div className="grid md:grid-cols-2 gap-6">
@@ -257,7 +255,6 @@ export default function PredictionInputForm({ onSubmit }) {
           )}
         </motion.div>
 
-
         {/* Symptoms */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
@@ -298,12 +295,10 @@ export default function PredictionInputForm({ onSubmit }) {
         </motion.div>
       </div>
 
-
-
-
       {/* SUBMIT BUTTON */}
       <div className="flex justify-center pt-4">
         <motion.button
+          type="submit"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           disabled={loading}
