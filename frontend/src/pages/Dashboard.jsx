@@ -156,15 +156,15 @@ const Dashboard = () => {
       </div>
 
       {/* 1. KEY METRICS ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* <MetricCard
           title="Model Accuracy"
           value={`${stats.accuracy}%`}
           sub="Based on feedback"
           icon={TrendingUp}
           color="text-green-500"
           bg="bg-green-500/10"
-        />
+        /> */}
         <MetricCard
           title="Avg Confidence"
           value={`${stats.avgConfidence}%`}
