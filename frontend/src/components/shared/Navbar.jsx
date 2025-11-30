@@ -50,7 +50,7 @@ const Navbar = () => {
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={16} /> },
     // { name: "Upload Data", path: "/upload", icon: <Stethoscope size={16} /> },
     { name: "Model Evaluation", path: "/evaluation", icon: <FileText size={16} /> },
-    { name: "Charts", path: "/charts", icon: <Users size={16} /> },
+    { name: "AI Simulator", path: "/simulator", icon: <Activity size={16} /> },
     { name: "AI Diagnostics", path: "/diagnostics", icon: <Stethoscope size={16} /> },
     { name: "Patients", path: "/patients", icon: <Users size={16} /> },
     { name: "Version Control", path: "/version-control", icon: <GitBranch size={16} /> },
@@ -77,7 +77,7 @@ const Navbar = () => {
           : "bg-background border-transparent"
           }`}
       >
-        <div className="max-w-360 mx-auto px-2 flex items-center justify-between">
+        <div className="max-w-[95rem] mx-auto px-2 flex items-center justify-between">
 
           {/* LOGO */}
           <Link to="/" className="flex items-center gap-2 group">

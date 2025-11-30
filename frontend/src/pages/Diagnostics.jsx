@@ -114,7 +114,7 @@ const Diagnostics = () => {
 
     } catch (error) {
       console.error("Prediction failed:", error);
-      alert(`Error: ${error.message}\n\nPlease ensure:\n1. The server is running on http://localhost:8000\n2. All required fields are filled\n3. Feature values are valid numbers`);
+      alert(`Error: ${error.message}\n\nPlease ensure:\n1. The server is running onhttps://5a1845ab7079.ngrok-free.app All required fields are filled\n3. Feature values are valid numbers`);
     } finally {
       setLoading(false);
     }

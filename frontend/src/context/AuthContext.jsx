@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }) => {
   // Create version function
   const createVersion = async () => {
     try {
-      const res = await axios.post("http://localhost:3000/api/versions");
+      const res = await axios.post("https://disrupters-opps.vercel.app/api/versions");
       return { success: true, data: res.data };
     } catch (error) {
       console.error("Error creating version:", error);
@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }) => {
   // Fetch versions function
   const fetchVersions = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/versions");
+      const res = await axios.get("https://disrupters-opps.vercel.app/api/versions");
       if (res.data.success) {
         setVersions(res.data.data);
       }
@@ -103,7 +103,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchAllFeedbacks = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/feedback");
+      const response = await axios.get("https://disrupters-opps.vercel.app/api/feedback");
       if (response.data.success) {
         setAllFeedbacks(response.data.data);
       }

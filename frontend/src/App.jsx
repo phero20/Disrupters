@@ -4,7 +4,7 @@ import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Upload from "./pages/Upload";
 import Results from "./pages/Evaluation";
-import Charts from "./pages/Charts";
+import Simulator from "./pages/Simulator";
 import Diagnostics from "./pages/Diagnostics";
 import Reports from "./pages/Reports";
 
@@ -30,7 +30,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/upload" element={<Upload />} />
           <Route path="/evaluation" element={<Results />} />
-          <Route path="/charts" element={<Charts />} />
+          <Route path="/simulator" element={<Simulator />} />
 
           {/* MedTech Pages */}
           <Route path="/diagnostics" element={<Diagnostics />} />
