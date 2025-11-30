@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -8,7 +8,10 @@ import {
   Cpu,
   HeartPulse,
   Pill,
-  User
+  User,
+  Upload,
+  FileImage,
+  X
 } from "lucide-react";
 
 const MEDICATIONS = [
@@ -107,10 +110,18 @@ const InputField = ({ label, value, onChange, error, type = "text", options }) =
   </div>
 );
 
-export default function PredictionInputForm({ onSubmit }) {
+export default function PredictionInputForm({
+  onSubmit,
+  onOCRUpload,
+  ocrLoading = false,
+  ocrError = null,
+  uploadedFile = null,
+  onRemoveUploadedFile
+}) {
   const [form, setForm] = useState({});
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const validate = () => {
     const newErrors = {};
@@ -171,6 +182,115 @@ export default function PredictionInputForm({ onSubmit }) {
     return null;
   };
 
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileUpload(file);
+    }
+  };
+
+  const handleFileUpload = async (file) => {
+    if (!file.type.startsWith('image/')) {
+      // If onOCRUpload is not provided, show error locally
+      if (!onOCRUpload) {
+        alert('Please upload a valid image file (PNG, JPG, JPEG)');
+        return;
+      }
+    }
+
+    if (!onOCRUpload) {
+      console.warn('OCR upload handler not provided');
+      return;
+    }
+
+    try {
+      // Call parent's OCR handler
+      const extractedData = await onOCRUpload(file);
+      console.log('OCR Extracted Data:', extractedData);
+
+      // Auto-fill form with extracted data
+      const updatedForm = { ...form };
+      let fieldsFilled = 0;
+
+      // Patient Information
+      if (extractedData.age !== null && extractedData.age !== undefined) {
+        updatedForm.Age = extractedData.age;
+        fieldsFilled++;
+      }
+      if (extractedData.sex) {
+        updatedForm.Sex = extractedData.sex;
+        fieldsFilled++;
+      }
+
+      // Lab Results (only fill if value is not null/undefined)
+      if (extractedData.ALT !== null && extractedData.ALT !== undefined) {
+        updatedForm.ALT = extractedData.ALT;
+        fieldsFilled++;
+      }
+      if (extractedData.AST !== null && extractedData.AST !== undefined) {
+        updatedForm.AST = extractedData.AST;
+        fieldsFilled++;
+      }
+      if (extractedData.ALP !== null && extractedData.ALP !== undefined) {
+        updatedForm.ALP = extractedData.ALP;
+        fieldsFilled++;
+      }
+      if (extractedData.Bilirubin !== null && extractedData.Bilirubin !== undefined) {
+        updatedForm.Bilirubin = extractedData.Bilirubin;
+        fieldsFilled++;
+      }
+      if (extractedData.Albumin !== null && extractedData.Albumin !== undefined) {
+        updatedForm.Albumin = extractedData.Albumin;
+        fieldsFilled++;
+      }
+
+      setForm(updatedForm);
+
+      // Clear any errors for fields that were filled
+      const newErrors = { ...errors };
+      ['Age', 'Sex', 'ALT', 'AST', 'ALP', 'Bilirubin', 'Albumin'].forEach(field => {
+        if (updatedForm[field] !== null && updatedForm[field] !== undefined && updatedForm[field] !== '') {
+          delete newErrors[field];
+        }
+      });
+      setErrors(newErrors);
+
+      // Show success message if fields were filled
+      if (fieldsFilled > 0) {
+        console.log(`Auto-filled ${fieldsFilled} field(s) from OCR extraction`);
+      }
+
+    } catch (error) {
+      // Error is already handled by parent component (Diagnostics.jsx)
+      console.error('OCR extraction failed:', error);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      handleFileUpload(file);
+    } else {
+      setOcrError('Please drop a valid image file');
+    }
+  };
+
+  const removeUploadedFile = () => {
+    if (onRemoveUploadedFile) {
+      onRemoveUploadedFile();
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <motion.form
       onSubmit={handleSubmit}
@@ -178,6 +298,81 @@ export default function PredictionInputForm({ onSubmit }) {
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-6xl mx-auto space-y-8"
     >
+      {/* OCR Upload Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-card border border-border/50 rounded-2xl p-4 shadow-sm"
+      >
+        <div
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={`
+            border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex items-center justify-center gap-4
+            ${uploadedFile
+              ? 'border-green-500/50 bg-green-500/5'
+              : ocrLoading
+                ? 'border-blue-500/50 bg-blue-500/5'
+                : 'border-border/50 hover:border-primary/50 hover:bg-primary/5'
+            }
+          `}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/jpg"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+
+          {ocrLoading ? (
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              <p className="text-sm text-muted-foreground">Extracting data...</p>
+            </div>
+          ) : uploadedFile ? (
+            <div className="flex items-center gap-3 w-full justify-between px-4">
+              <div className="flex items-center gap-3">
+                <FileImage size={20} className="text-green-500" />
+                <span className="text-sm font-medium text-green-600">{uploadedFile.name}</span>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeUploadedFile();
+                }}
+                className="p-1 hover:bg-muted rounded-full transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <Upload size={20} />
+              <span className="text-sm font-medium">Upload Medical Report to Auto-fill</span>
+            </div>
+          )}
+        </div>
+
+        {ocrError && (
+          <p className="mt-2 text-xs text-red-600 flex items-center gap-1 justify-center">
+            <AlertCircle size={12} /> {ocrError}
+          </p>
+        )}
+      </motion.div>
+
+      {/* OR Divider */}
+      <div className="relative flex items-center justify-center py-2">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-border/50" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">Or manually enter details</span>
+        </div>
+      </div>
+
       {/* SECTIONS */}
       <div className="grid md:grid-cols-2 gap-6">
         {SECTIONS.map((section, idx) => (

@@ -12,6 +12,14 @@ const Diagnostics = () => {
   const { saveFeedback, versions } = useAuth();
   const [lastFormData, setLastFormData] = useState(null); // Store form data for feedback
 
+  // OCR state management
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrError, setOcrError] = useState(null);
+  const [uploadedFile, setUploadedFile] = useState(null);
+
+  // OCR API URL - can be configured via environment variable
+  const OCR_API_URL = import.meta.env.VITE_OCR_API_URL || 'https://netherward-nonpredatorily-jeanna.ngrok-free.dev/extract';
+
   const handleFeedback = async (type) => {
     setFeedback(type);
 
@@ -46,6 +54,44 @@ const Diagnostics = () => {
     console.log("Sending feedback data:", feedbackData);
 
     await saveFeedback(feedbackData);
+  };
+
+  const handleOCRUpload = async (file) => {
+    setOcrLoading(true);
+    setOcrError(null);
+    setUploadedFile(file);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(OCR_API_URL, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          const errorText = await response.text();
+          errorData = { detail: errorText || `OCR Error: ${response.status}` };
+        }
+        throw new Error(errorData.detail || `OCR Error: ${response.status}`);
+      }
+
+      const extractedData = await response.json();
+      console.log('OCR Extracted Data:', extractedData);
+
+      return extractedData;
+    } catch (error) {
+      console.error('OCR extraction failed:', error);
+      setOcrError(error.message || 'Failed to extract data from report');
+      throw error;
+    } finally {
+      setOcrLoading(false);
+    }
   };
 
   const handlePredict = async (formData) => {
@@ -177,114 +223,94 @@ const Diagnostics = () => {
                     }`}>
                     {prediction.label}
                   </h2>
-                  {/* <p className="text-muted-foreground">
-                    Based on the provided clinical data
-                  </p> */}
                 </div>
 
                 <div className="p-8 space-y-6">
                   <div>
-                    <div className="flex justify-between text-sm font-medium mb-2">
+                    <div className="flex justify-between text-sm mb-2 font-medium text-muted-foreground">
                       <span>Confidence Score</span>
-                      <span>{(prediction.confidence * 100).toFixed(1)}%</span>
+                      <span>{(prediction.probability_dili * 100).toFixed(1)}%</span>
                     </div>
-                    <div className="h-4 bg-secondary rounded-full overflow-hidden">
+                    <div className="h-3 bg-secondary rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: `${prediction.confidence * 100}%` }}
+                        animate={{ width: `${prediction.probability_dili * 100}%` }}
                         transition={{ duration: 1, ease: "easeOut" }}
-                        className={`h-full rounded-full ${prediction.is_disease
-                          ? "bg-red-500"
-                          : "bg-green-500"
-                          }`}
+                        className={`h-full ${prediction.is_disease ? "bg-red-500" : "bg-green-500"}`}
                       />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2 text-center">
-                      {prediction.is_disease
-                        ? "Liver disease detected based on clinical parameters."
-                        : "No liver disease detected. All parameters are within normal range."}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="p-4 rounded-xl bg-secondary/50">
-                      <span className="block text-muted-foreground text-xs uppercase tracking-wider">Prediction</span>
-                      <span className="font-semibold text-lg">Class {prediction.predicted_class}</span>
-                    </div>
-                    <div className="p-4 rounded-xl bg-secondary/50">
-                      <span className="block text-muted-foreground text-xs uppercase tracking-wider">Model Version</span>
-                      <span className="font-semibold text-lg">
-                        v{versions.length > 0 ? versions[0].version : 1}.0
-                      </span>
                     </div>
                   </div>
 
                   {/* Feedback Section */}
-                  <div className="pt-6 border-t border-border/50 text-center">
-                    <h3 className="text-sm font-medium mb-4">Does this prediction match your medical report?</h3>
-
-                    {!feedback ? (
-                      <div className="flex justify-center gap-4">
+                  {!feedback ? (
+                    <div className="pt-6 border-t border-border">
+                      <p className="text-center text-sm font-medium text-muted-foreground mb-4">
+                        Do you agree with this assessment?
+                      </p>
+                      <div className="flex gap-4 justify-center">
                         <button
                           onClick={() => handleFeedback('yes')}
-                          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
+                          className="flex items-center gap-2 px-6 py-2 rounded-xl bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors font-medium"
                         >
                           <ThumbsUp size={18} />
-                          <span>Yes</span>
+                          Agree
                         </button>
                         <button
                           onClick={() => handleFeedback('no')}
-                          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-colors"
+                          className="flex items-center gap-2 px-6 py-2 rounded-xl bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-colors font-medium"
                         >
                           <ThumbsDown size={18} />
-                          <span>No</span>
+                          Disagree
                         </button>
                       </div>
-                    ) : (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-sm text-muted-foreground font-medium"
-                      >
-                        Thank you for your feedback!
-                      </motion.div>
-                    )}
-                  </div>
-
-                  {prediction.raw_prediction && (
-                    <div className="pt-4 border-t border-border/50">
-                      {/* <p className="text-xs text-muted-foreground text-center">
-                        Raw prediction value: {prediction.raw_prediction}
-                      </p> */}
                     </div>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="pt-6 border-t border-border text-center"
+                    >
+                      <p className="text-sm font-medium text-primary flex items-center justify-center gap-2">
+                        <CheckCircle size={16} />
+                        Thank you for your feedback!
+                      </p>
+                    </motion.div>
                   )}
                 </div>
-
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Page Header */}
-        <div className="text-center space-y-4 mb-8">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="inline-flex items-center justify-center p-2 rounded-2xl bg-primary/10 text-primary mb-1"
-          >
-            <Stethoscope size={32} />
-          </motion.div>
-          <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            AI Health Diagnostics
-          </h1>
-          <p className="text-muted-foreground text-md max-w-3xl mx-auto leading-relaxed">
-            Leverage our advanced machine learning model to analyze patient vitals and predict potential health risks with high accuracy.
-          </p>
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <Stethoscope className="text-primary" />
+              AI Diagnostics
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Advanced DILI Risk Assessment Model (v{versions.length > 0 ? versions[0].version : "1.0"})
+            </p>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-secondary rounded-full text-sm font-medium">
+            <Activity size={16} className={loading ? "animate-spin" : ""} />
+            {loading ? "Analyzing..." : "System Ready"}
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-1 gap-8">
-          <PredictionInputForm onSubmit={handlePredict} />
+          <PredictionInputForm
+            onSubmit={handlePredict}
+            onOCRUpload={handleOCRUpload}
+            ocrLoading={ocrLoading}
+            ocrError={ocrError}
+            uploadedFile={uploadedFile}
+            onRemoveUploadedFile={() => {
+              setUploadedFile(null);
+              setOcrError(null);
+            }}
+          />
         </div>
       </div>
     </motion.div>
@@ -292,4 +318,3 @@ const Diagnostics = () => {
 };
 
 export default Diagnostics;
-
