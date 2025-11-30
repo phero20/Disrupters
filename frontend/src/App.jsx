@@ -9,15 +9,17 @@ import Diagnostics from "./pages/Diagnostics";
 import Reports from "./pages/Reports";
 
 import "./App.css";
+import Navbar from "./components/shared/Navbar";
 import Sidebar from "./components/shared/Navbar";
 import Patients from "./pages/Pateints";
+import VersionControl from "./pages/VersionControl";
 
 function App() {
   return (
     <div className="bg-background min-h-screen text-foreground font-sans selection:bg-primary/20">
-      
+
       {/* Left Sidebar */}
-      <Sidebar />
+      <Navbar />
 
       {/* Main Content Area → shifted right on desktop */}
       <main className="mt-20 md:px-30 max-md:pb-28">
@@ -33,6 +35,8 @@ function App() {
           {/* MedTech Pages */}
           <Route path="/diagnostics" element={<Diagnostics />} />
           <Route path="/patients" element={<Patients />} />
+          <Route path="/patients" element={<Patients />} />
+          <Route path="/version-control" element={<VersionControl />} />
           <Route path="/reports" element={<Reports />} />
         </Routes>
       </main>

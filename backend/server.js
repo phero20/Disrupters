@@ -3,6 +3,9 @@ import connectDB from './configs/mongoDB.js'
 import authRouter from './routes/authRoutes.js'
 import dotenv from 'dotenv'
 import cors from 'cors'
+import feedbackRouter from './routes/feedbackRoutes.js'
+import versionRouter from './routes/versionRoutes.js'
+
 dotenv.config()
 
 const app = express()
@@ -18,10 +21,9 @@ app.get('/', (req, res) => {
     res.send('Hello World!')
 })
 
-import feedbackRouter from './routes/feedbackRoutes.js'
-
 app.use('/api/auth', authRouter)
 app.use('/api/feedback', feedbackRouter)
+app.use('/api/versions', versionRouter)
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)

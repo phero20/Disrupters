@@ -9,7 +9,7 @@ const Diagnostics = () => {
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState(null);
-  const { saveFeedback } = useAuth();
+  const { saveFeedback, versions } = useAuth();
   const [lastFormData, setLastFormData] = useState(null); // Store form data for feedback
 
   const handleFeedback = async (type) => {
@@ -213,7 +213,9 @@ const Diagnostics = () => {
                     </div>
                     <div className="p-4 rounded-xl bg-secondary/50">
                       <span className="block text-muted-foreground text-xs uppercase tracking-wider">Model Version</span>
-                      <span className="font-semibold text-lg">v1.0.0</span>
+                      <span className="font-semibold text-lg">
+                        v{versions.length > 0 ? versions[0].version : 1}.0
+                      </span>
                     </div>
                   </div>
 

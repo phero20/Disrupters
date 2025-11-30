@@ -10,6 +10,9 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [negativeFeedbacks, setNegativeFeedbacks] = useState([]);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [trainingLoading, setTrainingLoading] = useState(false);
+  const [versions, setVersions] = useState([]);
+  const [allFeedbacks, setAllFeedbacks] = useState([]);
 
   // Restore user/token from localStorage on refresh
   useEffect(() => {
@@ -60,11 +63,62 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Train model function
+  const trainModel = async () => {
+    setTrainingLoading(true);
+    try {
+      const res = await axios.post("https://29f1d8fe3c72.ngrok-free.app/train");
+      console.log("Training response:", res.data);
+      return { success: true, data: res.data };
+    } catch (error) {
+      console.error("Error training model:", error);
+      return { success: false, error: error.message };
+    } finally {
+      setTrainingLoading(false);
+    }
+  };
+
+  // Create version function
+  const createVersion = async () => {
+    try {
+      const res = await axios.post("http://localhost:3000/api/versions");
+      return { success: true, data: res.data };
+    } catch (error) {
+      console.error("Error creating version:", error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Fetch versions function
+  const fetchVersions = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/api/versions");
+      if (res.data.success) {
+        setVersions(res.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching versions:", error);
+    }
+  };
+
+  const fetchAllFeedbacks = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/feedback");
+      if (response.data.success) {
+        setAllFeedbacks(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching all feedbacks:", error);
+    }
+  };
+
   // Fetch on user change
   useEffect(() => {
     console.log("AuthContext: User changed:", user);
     if (user) {
       fetchNegativeFeedbacks();
+      fetchVersions();
+      fetchAllFeedbacks();
     }
   }, [user]);
 
@@ -169,6 +223,13 @@ export const AuthProvider = ({ children }) => {
         feedbackLoading,
         fetchNegativeFeedbacks,
         fetchPatients,
+        trainModel,
+        createVersion,
+        trainingLoading,
+        versions,
+        fetchVersions,
+        allFeedbacks,
+        fetchAllFeedbacks,
         isAuthenticated: !!token,
       }}
     >

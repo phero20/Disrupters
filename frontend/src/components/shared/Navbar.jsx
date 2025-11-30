@@ -12,7 +12,8 @@ import {
   Stethoscope,
   FileText,
   Users,
-  ChevronDown
+  ChevronDown,
+  GitBranch
 } from "lucide-react";
 import AuthModal from "./AuthModal";
 import { useAuth } from "../../context/AuthContext";
@@ -47,13 +48,14 @@ const Navbar = () => {
   const navItems = [
     { name: "Home", path: "/", icon: <Activity size={16} /> },
     { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={16} /> },
-    { name: "Upload Data", path: "/upload", icon: <Stethoscope size={16} /> },
+    // { name: "Upload Data", path: "/upload", icon: <Stethoscope size={16} /> },
     { name: "Model Evaluation", path: "/evaluation", icon: <FileText size={16} /> },
     { name: "Charts", path: "/charts", icon: <Users size={16} /> },
     { name: "AI Diagnostics", path: "/diagnostics", icon: <Stethoscope size={16} /> },
     { name: "Patients", path: "/patients", icon: <Users size={16} /> },
+    { name: "Version Control", path: "/version-control", icon: <GitBranch size={16} /> },
     { name: "Reports", path: "/reports", icon: <FileText size={16} /> },
-  ].filter(item => (item.name !== "Model Evaluation" && item.name !== "Patients") || user?.role === 'Pharmacist');
+  ].filter(item => (item.name !== "Model Evaluation" && item.name !== "Patients" && item.name !== "Version Control" && item.name !== "Dashboard") || user?.role === 'Pharmacist');
 
   const handleLogout = () => {
     logout();
@@ -157,6 +159,7 @@ const Navbar = () => {
                       <div className="px-3 py-2 border-b border-border mb-1">
                         <p className="text-sm font-medium">{user?.fullname}</p>
                         <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                        <p className="text-[10px] text-primary font-semibold mt-1 uppercase tracking-wide">{user?.role}</p>
                       </div>
 
                       <Link
@@ -167,13 +170,15 @@ const Navbar = () => {
                         <User size={16} /> Profile
                       </Link>
 
-                      <Link
-                        to="/dashboard"
-                        onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent rounded-lg"
-                      >
-                        <LayoutDashboard size={16} /> Dashboard
-                      </Link>
+                      {user?.role === 'Pharmacist' && (
+                        <Link
+                          to="/dashboard"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent rounded-lg"
+                        >
+                          <LayoutDashboard size={16} /> Dashboard
+                        </Link>
+                      )}
 
                       <button
                         onClick={handleLogout}
@@ -194,11 +199,13 @@ const Navbar = () => {
               </button>
             )}
 
-            <Link to="/dashboard">
-              <button className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-full">
-                <LayoutDashboard size={16} /> Dashboard
-              </button>
-            </Link>
+            {user?.role === 'Pharmacist' && (
+              <Link to="/dashboard">
+                <button className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-full">
+                  <LayoutDashboard size={16} /> Dashboard
+                </button>
+              </Link>
+            )}
           </div>
 
           {/* MOBILE HAMBURGER */}
@@ -279,7 +286,7 @@ const Navbar = () => {
             { name: "Diagnostics", path: "/diagnostics", icon: Stethoscope },
             { name: "Patients", path: "/patients", icon: Users },
             { name: "Reports", path: "/reports", icon: FileText },
-          ].map((item) => {
+          ].filter(item => item.name !== "Dashboard" || user?.role === 'Pharmacist').map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <button

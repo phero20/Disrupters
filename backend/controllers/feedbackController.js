@@ -46,3 +46,25 @@ export const getNegativeFeedback = async (req, res) => {
         });
     }
 };
+
+// @desc    Get ALL feedback
+// @route   GET /api/feedback
+// @access  Public (or Private if auth needed)
+export const getAllFeedback = async (req, res) => {
+    try {
+        const feedbacks = await Feedback.find({}).sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: feedbacks.length,
+            data: feedbacks,
+        });
+    } catch (error) {
+        console.error("Error fetching all feedback:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server Error",
+            error: error.message,
+        });
+    }
+};
